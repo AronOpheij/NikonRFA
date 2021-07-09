@@ -358,6 +358,23 @@ class NikonRFA:
             self.logger.warning('maximum acceleration is  255')
         self.query('rampslope {}'.format(a))
 
+
+class DummyNikonRFA:
+    """A very limited dummy class for developing other code while NikonRFA is not connected."""
+    def __init__(self, *args, **kwargs):
+        self._pos = 0
+
+    def absmove(self, new_pos):
+        self._pos = new_pos
+
+    @property
+    def pos(self):
+        return self._pos
+
+    def absmove_read(self, new_pos):
+        self.absmove(new_pos)
+        return self.pos
+
 if __name__ == '__main__':
     # This section contains code that may be used as an example how to use the class and for testing if the class functions
 
@@ -370,7 +387,7 @@ if __name__ == '__main__':
     for d in list_ports.comports():
         print(d.vid, d.pid, d.description)
 
-    rfa = NikonRFA(vid=6790, pid=29987)  # specify either the COM port (e.g. 'COM1') or the vid and pid
+    rfa = NikonRFA('COM9')  # vid=6790, pid=29987)  # specify either the COM port (e.g. 'COM1') or the vid and pid
     rfa.smallest_um_step = 0.05  # You may specify (overwrite) the smallest step
 
 

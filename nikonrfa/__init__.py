@@ -1,1 +1,1 @@
-from nikonrfa.rfa import NikonRFA
+from nikonrfa.rfa import NikonRFA, DummyNikonRFA
