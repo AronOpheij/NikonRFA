@@ -71,7 +71,22 @@ class NikonRFA:
                     self.logger.warning('Multiple matches found. Using first one')
                 else:
                     port = matches[0]
-        self.ser = serial.Serial(port, *args, timeout=timeout, **kwargs)
+        self.ser = serial.Serial()
+        self.ser.port = port  #, , **kwargs)
+        self.ser.timeout = timeout
+
+        for k in range(5):
+            try:
+                self.ser.open()
+            except:
+                pass
+            if self.ser.is_open:
+                break
+            print('RFA: Connection attempt {} failed. Trying again'.format(k))
+            self.ser.close()
+            time.sleep(1)
+
+        time.sleep(1)
         idn = self.query('WHO')
         if idn == 'Remote Focus Accessory (M)':
             ver = self.query('VERSION')
@@ -90,6 +105,7 @@ class NikonRFA:
         self.get_position()         # initializes:
         # _pos                      Stores the last retrieved position
         self._moved_since_last_read = True  # Used to keep track if the stages has moved since last position read
+        self.default_wait_s = 0
 
     def _get_encoder_status(self):
         """
@@ -119,7 +135,7 @@ class NikonRFA:
             reply = self.query('ENCODER OFF')
         self.logger.debug('Setting encoder status {}'.format(status))
 
-    def absmove(self, um):
+    def absmove(self, um, wait_s):
         """
         Move to absolute position (in um).
 
@@ -129,6 +145,10 @@ class NikonRFA:
         if reply:
             self.logger.warning('unexpected message: '+reply)
         self._moved_since_last_read = True
+        if wait_s is None:
+            time.sleep(self.default_wait_s)
+        else:
+            time.sleep(wait_s)
 
     def absmove_read(self, um):
         """
@@ -162,7 +182,7 @@ class NikonRFA:
             self.logger.warning('unexpected message: '+reply)
 
 
-    def relmove(self, um):
+    def relmove(self, um, wait_s=None):
         """
         Move by relative position from the curent position (in um).
 
@@ -172,6 +192,10 @@ class NikonRFA:
         if reply:
             self.logger.warning('unexpected message: '+reply)
         self._moved_since_last_read = True
+        if wait_s is None:
+            time.sleep(self.default_wait_s)
+        else:
+            time.sleep(wait_s)
 
     def relmove_read(self, um):
         """
